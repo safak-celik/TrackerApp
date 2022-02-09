@@ -21,6 +21,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
+
+/*
+ * ----------------
+ * Dieses File kann Kopiert und eingefügt werden in andere Projekte
+ * ----------------
+ */
+
 /**
  * A database that stores SleepNight information.
  * And a global method to get access to the database.
@@ -28,8 +35,17 @@ import androidx.room.RoomDatabase
  * This pattern is pretty much the same for any database,
  * so you can reuse it.
  */
+
+/*
+@Database : Database definieren
+ * entities Tabellenklasse einfügen
+ * version angeben
+ *
+ */
+
 @Database(entities = [SleepNight::class], version = 1, exportSchema = false)
 abstract class SleepDatabase : RoomDatabase() {
+
 
     /**
      * Connects the database to the DAO.
@@ -81,6 +97,8 @@ abstract class SleepDatabase : RoomDatabase() {
                 // Smart cast is only available to local variables.
                 var instance = INSTANCE
                 // If instance is `null` make a new database instance.
+                // Datenbank wird hier erstellt, falls noch nicht vorhanden -> Context übergeben, Datanbank Klasse übergeben
+                // und Namen vergeben
                 if (instance == null) {
                     instance = Room.databaseBuilder(
                         context.applicationContext,

@@ -20,17 +20,22 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/**
+ * @Entity(..) : Room macht daraus eine Tabelle mit Spalten nightId....
+ * @PrimaryKey(autoGenerate = true) : PK definieren autoamtisch von Room für jede Instanz (Eintrag in Zeile)
+ * @ColumnInfo(name = "..."): Für jede Spalte zusätzlich Namen vergeben für Zugriff
+ */
 @Entity(tableName = "daily_sleep_quality_table")
 data class SleepNight(
-        @PrimaryKey(autoGenerate = true)
-        var nightId: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    var nightId: Long = 0L,
 
-        @ColumnInfo(name = "start_time_milli")
-        val startTimeMilli: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "start_time_milli")
+    val startTimeMilli: Long = System.currentTimeMillis(),
 
-        @ColumnInfo(name = "end_time_milli")
-        var endTimeMilli: Long = startTimeMilli,
+    @ColumnInfo(name = "end_time_milli")
+    var endTimeMilli: Long = startTimeMilli,
 
-        @ColumnInfo(name = "quality_rating")
-        var sleepQuality: Int = -1
+    @ColumnInfo(name = "quality_rating")
+    var sleepQuality: Int = -1
 )

@@ -42,6 +42,8 @@ interface SleepDatabaseDao {
 
     /**
      * Selects and returns the row that matches the supplied start time, which is our key.
+     * nighID : Spalte
+     * key: Refrenz auf key von einer Funkition
      *
      * @param key startTimeMilli to match
      */
