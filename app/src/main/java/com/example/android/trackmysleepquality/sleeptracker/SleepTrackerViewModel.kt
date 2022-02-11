@@ -32,32 +32,70 @@ import kotlinx.coroutines.withContext
  * val database: SleepDatabaseDao: Zugriff auf Datenbank durch Instance von DAO ermöglichen
  * application: Application: Um Ressources, Strings etc Zugriff zu haben
  * Diese beiden werden hineingegeben
- *
- *
  */
 class SleepTrackerViewModel(val database: SleepDatabaseDao, application: Application) :
     AndroidViewModel(application) {
 
-    // hold current night --> Mit Livedata kann man observe und Mutable noch ändern
     private var tonight = MutableLiveData<SleepNight?>()
 
-    // Abfrage von allen Nächten
     private val nights = database.getAllNights()
 
-    val nightsToString = Transformations.map(nights) { nights ->
+    /**
+     * Converted nights to Spanned for displaying.
+     */
+    val nightsString = Transformations.map(nights) { nights ->
         formatNights(nights, application.resources)
-
     }
 
-    private val _isRunning = MutableLiveData<Boolean>()
-    val isRunning: LiveData<Boolean>
-        get() = _isRunning
+    val startButtonVisible = Transformations.map(tonight) { tonight ->
+        null == tonight
+    }
 
+    val stopButtonVisible = Transformations.map(tonight) { tonight ->
+        null != tonight
+    }
+
+    // Falls Liste von Nächten nicht leer ist --> Zeige Button
+    val clearButtonVisible = Transformations.map(nights) { nights ->
+        nights?.isNotEmpty()
+    }
+
+    // SnackBarEvent
+
+    private var _snackBarEvent = MutableLiveData<Boolean>()
+    val snackBarEvent: LiveData<Boolean>
+        get() = _snackBarEvent
+
+    fun doneShowingSnackBar() {
+        _snackBarEvent.value = false
+    }
+
+    /**
+     * Variable that tells the Fragment to navigate to a specific [SleepQualityFragment]
+     *
+     * This is private because we don't want to expose setting this value to the Fragment.
+     */
+    private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
+
+    /**
+     * If this is non-null, immediately navigate to [SleepQualityFragment] and call [doneNavigating]
+     */
+    val navigateToSleepQuality: LiveData<SleepNight>
+        get() = _navigateToSleepQuality
+
+    /**
+     * Call this immediately after navigating to [SleepQualityFragment]
+     *
+     * It will clear the navigation request, so if the user rotates their phone it won't navigate
+     * twice.
+     */
+    fun doneNavigating() {
+        _navigateToSleepQuality.value = null
+    }
 
     // To initialize the tonight
     init {
         initializeTonight()
-        _isRunning.value = false
     }
 
 
@@ -70,69 +108,77 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao, application: Applica
 
     // coroutine get tonight from the database
     // Start time ungleich EndTime --> return null, sonst night
+    /**
+     *  Handling the case of the stopped app or forgotten recording,
+     *  the start and end times will be the same.j
+     *
+     *  If the start time and end time are not the same, then we do not have an unfinished
+     *  recording.
+     */
     private suspend fun getTonightFromDatabase(): SleepNight? {
-        return withContext(Dispatchers.IO) {
-            var night = database.getTonight()
-            if (night?.endTimeMilli != night?.startTimeMilli) {
-                night = null
-            }
-            night
+        var night = database.getTonight()
+        if (night?.endTimeMilli != night?.startTimeMilli) {
+            night = null
         }
+        return night
     }
 
-    fun onStartTracking() {
-        if (_isRunning.value == false) {
-            viewModelScope.launch {
-                // Create new SleepNight
-                val newNight = SleepNight()
-                // In DB speichern
-                insert(newNight)
-                tonight.value = getTonightFromDatabase()
-            }
-            _isRunning.value = true
-        }
+    private suspend fun clear() {
+        database.clear()
+    }
+
+    private suspend fun update(night: SleepNight) {
+        database.update(night)
     }
 
     private suspend fun insert(night: SleepNight) {
-        withContext(Dispatchers.IO) {
-            database.insert(night)
+        database.insert(night)
+    }
+
+    /**
+     * Executes when the START button is clicked.
+     */
+    fun onStartTracking() {
+        viewModelScope.launch {
+            // Create a new night, which captures the current time,
+            // and insert it into the database.
+            val newNight = SleepNight()
+
+            insert(newNight)
+
+            tonight.value = getTonightFromDatabase()
         }
     }
+
 
     // ClickListener Aufruf in XML
     fun onStopTracking() {
         viewModelScope.launch {
+            // In Kotlin, the return@label syntax is used for specifying which function among
+            // several nested ones this statement returns from.
+            // In this case, we are specifying to return from launch(),
+            // not the lambda.
             val oldNight = tonight.value ?: return@launch
 
+            // Update the night in the database to add the end time.
             oldNight.endTimeMilli = System.currentTimeMillis()
 
             update(oldNight)
-            _isRunning.value = false
+
+            // Set state to navigate to the SleepQualityFragment.
+            _navigateToSleepQuality.value = oldNight
         }
     }
 
-    private suspend fun update(night: SleepNight) {
-        withContext(Dispatchers.IO) {
-            database.update(night)
-        }
-    }
 
-    // ClickListener Aufruf in XML
     fun onClear() {
         viewModelScope.launch {
+            // Clear the database table.
             clear()
+            // And clear tonight since it's no longer in the database
             tonight.value = null
-            _isRunning.value = false
-        }
-
-    }
-
-    private suspend fun clear() {
-        withContext(Dispatchers.IO) {
-            database.clear()
+            _snackBarEvent.value = true
         }
     }
-
-
 }
 
