@@ -107,7 +107,8 @@ class SleepTrackerFragment : Fragment() {
 
         sleepTrackerViewModel.nights.observe(viewLifecycleOwner) {
             it?.let {
-                adapter.data = it
+                // submitList: Methode von DiffUtil, welches die Liste Updatet
+                adapter.submitList(it)
             }
         }
 
