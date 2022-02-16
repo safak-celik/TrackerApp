@@ -9,6 +9,14 @@ import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.databinding.ListItemBinding
 
 
+private val ITEM_VIEW_TYPE_HEADER = 0
+private val ITEM_VIEW_TYPE_ITEM = 1
+
+/**
+ * RecyclerView interagieren nicht direkt mit Viewa
+ * Das erledigt der ViewHolder
+ */
+
 /**
  * RecyclerView interagieren nicht direkt mit Viewa
  * Das erledigt der ViewHolder
@@ -66,6 +74,10 @@ class SleepNightDiffUtilCallBack : DiffUtil.ItemCallback<SleepNight>() {
 }
 
 // On item Click
-class SleepNightListeners(val clickListener: (sleepId: Long) -> Unit) {
+class SleepNightListeners(
+    val clickListener: (sleepId: Long) -> Unit,
+    val longClickListener: (sleepId: Long) -> Boolean
+) {
     fun onClick(night: SleepNight) = clickListener(night.nightId)
+    fun onLongClick(night: SleepNight) = longClickListener(night.nightId)
 }

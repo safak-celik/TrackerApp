@@ -38,7 +38,7 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao, application: Applica
 
     private var tonight = MutableLiveData<SleepNight?>()
 
-     val nights = database.getAllNights()
+    val nights = database.getAllNights()
 
     /**
      * Converted nights to Spanned for displaying.
@@ -66,9 +66,37 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao, application: Applica
     val snackBarEvent: LiveData<Boolean>
         get() = _snackBarEvent
 
+    // For Change Item
+    private val _navigateToSelectedSleepDataQuality = MutableLiveData<Long>()
+    val navigateToSelectedSleepDataQuality
+        get() = _navigateToSelectedSleepDataQuality
+
+    // For Details
+    private val _navigateToSelectedSleepQualityDetails = MutableLiveData<Long>()
+    val navigateToSelectedSleepQualityDetails
+        get() = _navigateToSelectedSleepQualityDetails
+
+    fun onClickItem(id: Long) {
+        _navigateToSelectedSleepQualityDetails.value = id
+    }
+
+    fun onClickNavigate() {
+        _navigateToSelectedSleepQualityDetails.value = null
+    }
+
+    fun onLongClickItem(id: Long) {
+        _navigateToSelectedSleepDataQuality.value = id
+    }
+
+    fun onLongClickNavigate() {
+        _navigateToSelectedSleepDataQuality.value = null
+    }
+
+
     fun doneShowingSnackBar() {
         _snackBarEvent.value = false
     }
+
 
     /**
      * Variable that tells the Fragment to navigate to a specific [SleepQualityFragment]

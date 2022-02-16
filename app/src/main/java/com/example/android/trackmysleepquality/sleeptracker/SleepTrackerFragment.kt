@@ -21,17 +21,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
-import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerBinding
 import com.google.android.material.snackbar.Snackbar
 
@@ -90,6 +87,7 @@ class SleepTrackerFragment : Fragment() {
             }
         }
 
+        // Show Snackbar
         sleepTrackerViewModel.snackBarEvent.observe(viewLifecycleOwner) { snackbar ->
             if (snackbar == true) {
                 Snackbar.make(
@@ -98,6 +96,29 @@ class SleepTrackerFragment : Fragment() {
                     Snackbar.LENGTH_SHORT
                 ).show()
                 sleepTrackerViewModel.doneShowingSnackBar()
+            }
+        }
+
+        //  Observe OnClick
+        sleepTrackerViewModel.navigateToSelectedSleepQualityDetails.observe(viewLifecycleOwner) { night ->
+            night?.let {
+                this.findNavController().navigate(
+                    SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepDetailFragment(
+                        night
+                    )
+                )
+                sleepTrackerViewModel.onClickNavigate()
+            }
+        }
+        //  Observe OnLongClick
+        sleepTrackerViewModel.navigateToSelectedSleepDataQuality.observe(viewLifecycleOwner) { night ->
+            night?.let {
+                this.findNavController().navigate(
+                    SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepQualityFragment(
+                        night
+                    )
+                )
+                sleepTrackerViewModel.onLongClickNavigate()
             }
         }
 
@@ -110,9 +131,19 @@ class SleepTrackerFragment : Fragment() {
         binding.rcList.layoutManager = layoutManager
 
         // Create new Adapter with Click Listeners
-        val adapter = SleepTrackerAdapter(SleepNightListeners { nightId ->
-            Toast.makeText(context,"$nightId",Toast.LENGTH_SHORT).show()
-        })
+        val adapter = SleepTrackerAdapter(
+            SleepNightListeners(
+                // CLick Item
+                { nightId ->
+                    sleepTrackerViewModel.onClickItem(nightId)
+                },
+                // onLongClick Item
+                { nightId ->
+                    sleepTrackerViewModel.onLongClickItem(nightId)
+                    true //indicates we have handled long clicks
+                }
+            )
+        )
         // Bind RC
         binding.rcList.adapter = adapter
 
