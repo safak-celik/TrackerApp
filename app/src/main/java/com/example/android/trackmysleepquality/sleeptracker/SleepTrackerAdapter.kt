@@ -1,17 +1,12 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.android.trackmysleepquality.R
-import com.example.android.trackmysleepquality.convertDurationToFormatted
-import com.example.android.trackmysleepquality.convertNumericQualityToString
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.databinding.ListItemBinding
-import kotlinx.android.synthetic.main.list_item.view.*
 
 
 /**
@@ -19,13 +14,12 @@ import kotlinx.android.synthetic.main.list_item.view.*
  * Das erledigt der ViewHolder
  */
 
-class SleepTrackerAdapter :
+class SleepTrackerAdapter(private val clickListener: SleepNightListeners) :
     ListAdapter<SleepNight, SleepTrackerAdapter.ViewHolder>(SleepNightDiffUtilCallBack()) {
 
     // Show data in a specific Position --> 1 Item wo die daten herkommen und angezeigt werden sollen
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)
-        holder.bind(item)
+        holder.bind(getItem(position)!!, clickListener)
     }
 
     // 1 item of RC --> Parent View
@@ -37,13 +31,14 @@ class SleepTrackerAdapter :
     class ViewHolder private constructor(val binding: ListItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: SleepNight) {
+        fun bind(item: SleepNight, clickListener: SleepNightListeners) {
             // Binding Data from Binding Adapter
             /*
             Evaluates the pending bindings, updating any Views that have expressions bound to modified variables. T
             his must be run on the UI thread.
              */
             binding.sleep = item
+            binding.clickListener = clickListener
             binding.executePendingBindings()
         }
 
@@ -68,5 +63,9 @@ class SleepNightDiffUtilCallBack : DiffUtil.ItemCallback<SleepNight>() {
     override fun areContentsTheSame(oldItem: SleepNight, newItem: SleepNight): Boolean {
         return oldItem == newItem
     }
+}
 
+// On item Click
+class SleepNightListeners(val clickListener: (sleepId: Long) -> Unit) {
+    fun onClick(night: SleepNight) = clickListener(night.nightId)
 }

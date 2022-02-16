@@ -125,6 +125,7 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao, application: Applica
 
     private suspend fun clear() {
         database.clear()
+
     }
 
     private suspend fun update(night: SleepNight) {
@@ -143,7 +144,6 @@ class SleepTrackerViewModel(val database: SleepDatabaseDao, application: Applica
             // Create a new night, which captures the current time,
             // and insert it into the database.
             val newNight = SleepNight()
-
             insert(newNight)
 
             tonight.value = getTonightFromDatabase()

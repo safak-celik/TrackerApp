@@ -21,11 +21,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
@@ -76,7 +78,7 @@ class SleepTrackerFragment : Fragment() {
         binding.lifecycleOwner = this
 
         // Observer setzen für Navigation Variable
-        sleepTrackerViewModel.navigateToSleepQuality.observe(viewLifecycleOwner, Observer { night ->
+        sleepTrackerViewModel.navigateToSleepQuality.observe(viewLifecycleOwner) { night ->
             night?.let {
                 this.findNavController()
                     .navigate(
@@ -86,9 +88,9 @@ class SleepTrackerFragment : Fragment() {
                     )
                 sleepTrackerViewModel.doneNavigating()
             }
-        })
+        }
 
-        sleepTrackerViewModel.snackBarEvent.observe(viewLifecycleOwner, Observer { snackbar ->
+        sleepTrackerViewModel.snackBarEvent.observe(viewLifecycleOwner) { snackbar ->
             if (snackbar == true) {
                 Snackbar.make(
                     requireActivity().findViewById(android.R.id.content),
@@ -97,10 +99,20 @@ class SleepTrackerFragment : Fragment() {
                 ).show()
                 sleepTrackerViewModel.doneShowingSnackBar()
             }
-        })
+        }
 
-        // Create new Adapter
-        val adapter = SleepTrackerAdapter()
+        /**
+         * Gridlayout mit 3 Items pro Spalte
+         * --> Muss in Kotlin geamcht wereden
+         * Falls LinaerLayoutmanager pro Reihe 1 --> Dann in XML mit  app:layoutManager
+         */
+        val layoutManager = GridLayoutManager(activity, 3)
+        binding.rcList.layoutManager = layoutManager
+
+        // Create new Adapter with Click Listeners
+        val adapter = SleepTrackerAdapter(SleepNightListeners { nightId ->
+            Toast.makeText(context,"$nightId",Toast.LENGTH_SHORT).show()
+        })
         // Bind RC
         binding.rcList.adapter = adapter
 
@@ -111,9 +123,6 @@ class SleepTrackerFragment : Fragment() {
                 adapter.submitList(it)
             }
         }
-
-
-
         return binding.root
     }
 }
